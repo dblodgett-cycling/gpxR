@@ -123,11 +123,11 @@ new_track <- eventReactive(input$savebutton, {
 
     app_env$zoom <- input$trackmap_bounds
 
-    track <- gpxr:::bez_smooth((tail(app_env$history, n = 1)[[1]]),
-                               p$start_id, p$end_id,
-                               sf::st_coordinates(
-                                 sf::st_transform(p$point, 5070)),
-                               n_points = 10, reset_ids = TRUE)
+    track <- bez_smooth((tail(app_env$history, n = 1)[[1]]),
+                        p$start_id, p$end_id,
+                        sf::st_coordinates(
+                          sf::st_transform(p$point, 5070)),
+                        n_points = 10, reset_ids = TRUE)
 
     app_env$history <- c(app_env$history, list(track))
 
