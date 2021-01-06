@@ -32,6 +32,11 @@ observe({
   if(!is.null(app_env$cp$start_id) &&
      !is.null(app_env$cp$end_id)) {
     app_env$cp$start_id <- app_env$cp$end_id <- NULL
+
+    trackmap_proxy = leafletProxy("trackmap") %>%
+      removeMarker(layerId = "start") %>%
+      removeMarker(layerId = "end")
+
   }
 
   # If in_id is a repeat of the start_id, don't set end.
@@ -46,10 +51,17 @@ observe({
 
     app_env$cp$start_id <- in_id
 
+    trackmap_proxy = leafletProxy("trackmap") %>%
+      removeMarker(layerId = "start") %>%
+      addCircleMarkers(click$lng, click$lat, radius = 2, color = "green", layerId = "start")
+
   } else if(app_env$cp$start_id != in_id) {
 
     app_env$cp$end_id <- in_id
 
+    trackmap_proxy = leafletProxy("trackmap") %>%
+      removeMarker(layerId = "end") %>%
+      addCircleMarkers(click$lng, click$lat, radius = 2, color = "red", layerId = "end")
   }
 
 })
@@ -70,8 +82,8 @@ observe({
   if(is.null(click <- point_click_event())) return()
 
   trackmap_proxy = leafletProxy("trackmap") %>%
-    clearMarkers() %>%
-    addCircleMarkers(click$lng, click$lat, radius = 2)
+    removeMarker(layerId = "point") %>%
+    addCircleMarkers(click$lng, click$lat, radius = 2, layerId = "point")
 
   app_env$cp$point <- sf::st_sfc(sf::st_point(c(click$lng, click$lat)),
                                  crs = 4326)
@@ -83,35 +95,43 @@ observe({
   output$controlpoint <- renderPrint(app_env$cp)
 })
 
+# Reactive triggered by undo button.
+last_track <- eventReactive(input$undobutton, {
+
+  if(length(app_env$history) == 1) {
+
+    (app_env$history[[1]])
+
+  } else {
+
+    app_env$history <- app_env$history[1:(length(app_env$history) - 1)]
+
+  }
+
+  length(app_env$history)
+
+}, ignoreNULL = FALSE)
+
 # Reactive triggered by save point button.
-# cp_df <- eventReactive(input$savebutton, {
-#   p <- app_env$cp
-#
-#   new_row <- st_sf(start_id = p$start_id, end_id = p$end_id, point = p$point)
-#
-#   (app_env$df <- rbind(app_env$df, new_row))
-# }, ignoreNULL = FALSE)
 new_track <- eventReactive(input$savebutton, {
   p <- app_env$cp
 
   if(length(p) > 0) {
-    new_row <- st_sf(start_id = p$start_id, end_id = p$end_id, point = p$point)
+    new_row <- sf::st_sf(start_id = p$start_id, end_id = p$end_id, point = p$point)
 
     app_env$df <- rbind(app_env$df, new_row)
 
     app_env$zoom <- input$trackmap_bounds
 
-    (app_env$track <- gpxr:::bez_smooth(app_env$track,
-                                        p$start_id, p$end_id,
-                                        sf::st_coordinates(
-                                          sf::st_transform(p$point, 5070))))
-  } else {
-    (app_env$track)
+    track <- gpxr:::bez_smooth((tail(app_env$history, n = 1)[[1]]),
+                               p$start_id, p$end_id,
+                               sf::st_coordinates(
+                                 sf::st_transform(p$point, 5070)))
+
+    app_env$history <- c(app_env$history, list(track))
+
   }
 
-}, ignoreNULL = FALSE)
+  length(app_env$history)
 
-# Observer for cd_df() reactive data table
-# observe({
-#   output$cpdf <- renderDataTable(cp_df())
-# })
+}, ignoreNULL = FALSE)

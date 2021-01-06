@@ -2,17 +2,7 @@ library(gpxr)
 library(dplyr)
 library(shiny)
 library(leaflet)
-
-f <- "gpx/RGT_Benton_Park_Classic_(copy).gpx"
-
-track <- load_track_points(f)
-
-track <- simplify_track(track, 0)
-
-bb <- as.list(sf::st_bbox(track))
-names(bb) <- c("west", "south", "east", "north")
-
-track <- sf::st_transform(track, 5070)
+library(sf)
 
 gt <- tempfile(fileext = ".geojson")
 
@@ -21,13 +11,17 @@ app_env <- reactiveValues(cp = list(),
                           le = 0,
                           ends = TRUE,
                           trackmap_geojson_click = NULL,
-                          track = track,
-                          zoom = bb)
+                          track = NULL,
+                          history = NULL,
+                          zoom = list(west = -180, south = -180,
+                                      east = 180, north = 180),
+                          f = NULL)
 
 ##### UI #####
 ui <- fluidPage(
   leafletOutput("trackmap"),
   p(),
+  shiny::actionButton("undobutton", "Undo"),
   shiny::radioButtons("point_id", "Ends or Point",
                       choices = c("Ends", "Point"),
                       inline = TRUE),
@@ -38,21 +32,73 @@ ui <- fluidPage(
 )
 ##############
 
+# the modal dialog where the user can enter the query details.
+upload_modal <- modalDialog(
+  title = "Upload GPX",
+  fileInput("f", "upload", multiple = FALSE, accept = ".gpx"),
+  easyClose = F,
+  footer = actionButton("dismiss_modal", label = "Dismiss")
+)
 
 server <- function(input, output, session) {
+
+  # Show the model on start up ...
+  showModal(upload_modal)
+
+  # I think this will work?
+  redraw_listener <- reactive({
+    watch <- list(last_track(), new_track())
+    (tail(app_env$history, n = 1)[[1]])
+  })
+
+
+  first_track <- reactive({
+    f <- app_env$f
+
+    if(is.null(f)) return()
+
+    length(f)
+  })
+
+  observeEvent(input$dismiss_modal, {
+    removeModal()
+
+    app_env$f <- input$f
+
+    track <- load_track_points(input$f$datapath)
+
+    track <- simplify_track(track, 0)
+
+    bb <- as.list(sf::st_bbox(track))
+    names(bb) <- c("west", "south", "east", "north")
+
+    app_env$zoom <- bb
+
+    track <- sf::st_transform(track, 5070)
+
+    app_env$history <- list(track)
+
+    app_env$track <- track
+  }, ignoreNULL = TRUE)
 
   # Observer for redrawing the map
   observe({
 
-    sf::write_sf(buffer_track(new_track()), gt)
+    track <- redraw_listener()
 
-    gj <- jsonlite::fromJSON(gt, simplifyVector = FALSE)
+    if(!is.null(track)) {
 
-    unlink(gt)
+      sf::write_sf(buffer_track(track), gt)
+
+      gj <- jsonlite::fromJSON(gt, simplifyVector = FALSE)
+
+      unlink(gt)
+
+    } else {
+      gj <- NULL
+    }
 
     bb <- app_env$zoom
-
-    message(str(bb))
 
     # Base map
     output$trackmap <- renderLeaflet({
@@ -68,10 +114,10 @@ server <- function(input, output, session) {
   })
 
   # Contains observers and reactives for track corner smoothing.
-  source("smoothing.R")
+  source("smoothing.R", local = TRUE)
 
   # contains observers and reactives for elevation cleaning
-  source("elevation.R")
+  source("elevation.R", local = TRUE)
 
   # Reactive triggered by final save button
   save_df <- eventReactive(input$globalsave, {
