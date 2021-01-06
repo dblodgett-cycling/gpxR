@@ -28,7 +28,7 @@ ui <- fluidPage(
   actionButton("savebutton", "Save Point"),
   shiny::verbatimTextOutput("controlpoint"),
   # shiny::dataTableOutput("cpdf"),
-  shiny::actionButton("globalsave", "Save Table")
+  shiny::downloadButton("globalsave", "Save Track")
 )
 ##############
 
@@ -119,16 +119,22 @@ server <- function(input, output, session) {
   # contains observers and reactives for elevation cleaning
   source("elevation.R", local = TRUE)
 
-  # Reactive triggered by final save button
-  save_df <- eventReactive(input$globalsave, {
-    app_env$df
-  })
+  write_out <- function(f) {
 
-  # observer to write reactive function back to global env.
-  observe({
-    output_control_point <<- save_df()
-    stopApp()
-  })
+    track <- tail(app_env$history, n = 1)[[1]] %>%
+      mutate(ele = track$ele, track_seg_id = 0, track_fid = 0, time = "")%>%
+      sf::st_transform(4326)
+
+    unlink(f)
+
+    sf::write_sf(track, f, "track_points", driver = "GPX")
+  }
+
+  # Reactive triggered by final save button
+  output$globalsave <- downloadHandler(filename = "gpxr_out.gpx",
+                                       content = write_out,
+                                       contentType = "text/xml")
+
 }
 
 shinyApp(ui, server)
