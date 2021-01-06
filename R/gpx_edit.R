@@ -67,9 +67,19 @@ make_loop <- function(track, start_id, end_id,
 }
 
 #' bezier smooth
+#' @description replaces the track points between start and end points
+#' with a bezier curve.
+#' @param start_id integer start track_seg_point_id
+#' @param end_id integer end track_seg_point_id
+#' @param control numeric of length 2 or equivalent that can be coerced to matrix.
+#' must be in same projection as track.
+#' @param n_points integer number of points to create along the new curve.
+#' @param reset_ids logical if FALSE, track ids will not be reset and new points
+#' will not have ids.
+#' @export
 #' @inheritParams make_loop
 #'
-bez_smooth <- function(track, start_id, end_id, control) {
+bez_smooth <- function(track, start_id, end_id, control, n_points = 10, reset_ids = FALSE) {
 
   control <- matrix(control, nrow = 1)
 
@@ -79,7 +89,7 @@ bez_smooth <- function(track, start_id, end_id, control) {
   start_point <- sf::st_coordinates(track[start_row, ])[, 1:2]
   end_point <- sf::st_coordinates(track[end_row, ])[, 1:2]
 
-  new_points <- bezier::bezier(t = seq(0, 1, length = 10), p = control,
+  new_points <- bezier::bezier(t = seq(0, 1, length = n_points), p = control,
                        start = start_point, end = end_point)
 
   new_points <- as.data.frame(new_points)
@@ -90,6 +100,10 @@ bez_smooth <- function(track, start_id, end_id, control) {
   new_points$ele <- seq(from = track$ele[start_row], to = track$ele[end_row], length.out = 10)
 
   out <- bind_rows(track[1:(start_row - 1), ], new_points, track[(end_row + 1):nrow(track), ])
+
+  if(reset_ids) {
+    out$track_seg_point_id <- 1:nrow(out)
+  }
 
   out
 }
@@ -211,7 +225,7 @@ to_points <- function(track, crs) {
 }
 
 #' Add distance
-#' @param track
+#' @inheritParams make_loop
 #' @export
 add_distance <- function(track) {
   track <- st_drop_geometry(bind_cols(track,

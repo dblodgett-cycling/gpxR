@@ -1,4 +1,4 @@
-library(gpxr)
+source("R/gpx_edit.R")
 library(dplyr)
 library(shiny)
 library(leaflet)
@@ -19,25 +19,42 @@ app_env <- reactiveValues(cp = list(),
 
 ##### UI #####
 ui <- fluidPage(
-  leafletOutput("trackmap"),
-  p(),
-  shiny::actionButton("undobutton", "Undo"),
-  shiny::radioButtons("point_id", "Ends or Point",
-                      choices = c("Ends", "Point"),
-                      inline = TRUE),
-  actionButton("savebutton", "Save Point"),
-  shiny::verbatimTextOutput("controlpoint"),
-  # shiny::dataTableOutput("cpdf"),
-  shiny::downloadButton("globalsave", "Save Track")
+  sidebarLayout(
+    sidebarPanel(
+      p("1) Zoom to the corner to edit (hint: hold shift to drag a box)"),
+      p("2) Click the desired start <strong>then</strong> end point for the new curve."),
+      p("3) Click the desired control point of the new curve. (hint: use undo to experiment)"),
+      p("4) Click 'Save Point' to recalculate the track with the new curve."),
+      p("5) Repeat 1 through 4 until you are happy."),
+      p("6) Click 'Save track' to download your modified gpx file."),
+      br(),
+      p("test")
+    ),
+    mainPanel(
+      leafletOutput("trackmap"),
+      p(),
+      shiny::actionButton("undobutton", "Undo"),
+      shiny::radioButtons("point_id", "Ends or Point",
+                          choices = c("Ends", "Point"),
+                          inline = TRUE),
+      actionButton("savebutton", "Save Point"),
+      shiny::verbatimTextOutput("controlpoint"),
+      # shiny::dataTableOutput("cpdf"),
+      shiny::downloadButton("globalsave", "Save Track")
+    )
+  )
 )
 ##############
 
 # the modal dialog where the user can enter the query details.
 upload_modal <- modalDialog(
   title = "Upload GPX",
+  p("This app is designed to reflow corners of a gpx to ensure they are not too sharp for RGT."),
+  br(),
+  p("The GPX should contain no overlaps and be point to point or form a loop"),
   fileInput("f", "upload", multiple = FALSE, accept = ".gpx"),
   easyClose = F,
-  footer = actionButton("dismiss_modal", label = "Dismiss")
+  footer = actionButton("dismiss_modal", label = "Done")
 )
 
 server <- function(input, output, session) {
@@ -51,16 +68,12 @@ server <- function(input, output, session) {
     (tail(app_env$history, n = 1)[[1]])
   })
 
-
-  first_track <- reactive({
-    f <- app_env$f
-
-    if(is.null(f)) return()
-
-    length(f)
-  })
-
   observeEvent(input$dismiss_modal, {
+    if(is.null(input$f)) {
+      showNotification("Upload gpx file first.")
+      return()
+    }
+
     removeModal()
 
     app_env$f <- input$f
@@ -122,7 +135,7 @@ server <- function(input, output, session) {
   write_out <- function(f) {
 
     track <- tail(app_env$history, n = 1)[[1]] %>%
-      mutate(ele = track$ele, track_seg_id = 0, track_fid = 0, time = "")%>%
+      mutate(track_seg_id = 0, track_fid = 0, time = "")%>%
       sf::st_transform(4326)
 
     unlink(f)

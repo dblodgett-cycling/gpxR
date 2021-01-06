@@ -4,17 +4,24 @@
 \alias{bez_smooth}
 \title{bezier smooth}
 \usage{
-bez_smooth(track, start_id, end_id, control)
+bez_smooth(track, start_id, end_id, control, n_points = 10, reset_ids = FALSE)
 }
 \arguments{
 \item{track}{sf data.frame gpx track}
 
-\item{start_id}{numeric track_seg_point_id of start}
+\item{start_id}{integer start track_seg_point_id}
 
-\item{end_id}{numeric track_seg_point_id of end}
+\item{end_id}{integer end track_seg_point_id}
 
-\item{control}{numeric c(lon, lat)}
+\item{control}{numeric of length 2 or equivalent that can be coerced to matrix.
+must be in same projection as track.}
+
+\item{n_points}{integer number of points to create along the new curve.}
+
+\item{reset_ids}{logical if FALSE, track ids will not be reset and new points
+will not have ids.}
 }
 \description{
-bezier smooth
+replaces the track points between start and end points
+with a bezier curve.
 }

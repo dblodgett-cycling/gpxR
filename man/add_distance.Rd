@@ -6,6 +6,9 @@
 \usage{
 add_distance(track)
 }
+\arguments{
+\item{track}{sf data.frame gpx track}
+}
 \description{
 Add distance
 }
