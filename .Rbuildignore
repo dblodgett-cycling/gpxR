@@ -1,0 +1,5 @@
+^gpxr\.Rproj$
+^\.Rproj\.user$
+app.R
+smoothing.R
+elevation.R

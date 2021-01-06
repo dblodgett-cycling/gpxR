@@ -1,0 +1,23 @@
+---
+title: "armed_forces"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("gpx_edit.R")
+
+track_f <- "RGTCycling_Armed-Forces-Classic_2020-12-13_19-00-00.gpx"
+
+track <- load_track_points(track_f)
+
+start_id <- 1
+end_id <- 81
+
+sub <- make_loop(track, start_id, end_id, NULL, NULL)
+
+mapview(sub)
+```
