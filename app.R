@@ -28,7 +28,9 @@ ui <- fluidPage(
       p("5) Repeat 1 through 4 until you are happy."),
       p("6) Click 'Save track' to download your modified gpx file."),
       br(),
-      p("test")
+      p("Inputs for this workflow can be created with tools such as ride with gps."),
+      p("Elevation data must be supplied from elsewhere and all added points will have linear interpolated elevations."),
+      p("To densify the points, add curves with little to no curvature.")
     ),
     mainPanel(
       leafletOutput("trackmap"),
