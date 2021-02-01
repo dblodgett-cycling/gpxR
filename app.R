@@ -3,6 +3,8 @@ library(dplyr)
 library(shiny)
 library(leaflet)
 library(sf)
+library(ggplot2)
+# library(Cairo)
 
 gt <- tempfile(fileext = ".geojson")
 
@@ -44,6 +46,18 @@ ui <- fluidPage(
       # shiny::dataTableOutput("cpdf"),
       shiny::downloadButton("globalsave", "Save Track")
     )
+  ),
+  sidebarLayout(sidebarPanel(
+    p("help"),
+    p("help"),
+    p("help")),
+    mainPanel(
+    plotOutput("elevation", click = "ele_click"),
+    fluidRow(
+      column(width = 6,
+             p("Clicked Point"),
+             verbatimTextOutput("click_info"))
+    ))
   )
 )
 ##############
@@ -133,6 +147,27 @@ server <- function(input, output, session) {
 
   # contains observers and reactives for elevation cleaning
   source("elevation.R", local = TRUE)
+
+  # Observer for redrawing the elevation plot
+  observe({
+
+    track <- redraw_listener()
+
+    if(!is.null(track)) {
+
+      output$elevation <- renderPlot(ggplot(track, aes(track_seg_point_id, ele)) + geom_point())
+
+    } else {
+
+      output$elevation <- renderPlot(ggplot())
+
+    }
+
+  })
+
+  output$click_info <- renderPrint({
+    nearPoints(tail(app_env$history, n = 1)[[1]], input$ele_click, addDist = TRUE)
+  })
 
   write_out <- function(f) {
 
