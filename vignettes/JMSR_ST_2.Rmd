@@ -1,0 +1,67 @@
+---
+title: "Gateway Cup"
+author: "dblodgett.h2o@gmail.com"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Plotting with nhdplusTools}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width=6,
+  fig.height=4)
+
+oldoption <-
+  options(scipen = 9999,
+          "rgdal_show_exportToProj4_warnings"="none")
+
+library(gpxr)
+library(dplyr)
+library(sf)
+library(mapview)
+mapviewOptions(fgb = TRUE)
+```
+
+```{r} 
+
+f <- "../gpx/JMSR_ST_2.gpx"
+
+track <- load_track_points(f)
+
+track <- sf::st_transform(track, 5070)
+
+track <- simplify_track(track, 0)
+
+plot(st_geometry(track))
+
+```
+
+```{r}
+domains <- c(0, 210, 500, 570, 638, 660, 770, 810, 890, 945, 1040, nrow(track))
+smoothers <- c(10, 10, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+track2 <- smooth_elev(track, domains, smoothers)
+
+plot(track$track_seg_point_id, track$ele)
+grid()
+points(track2$track_seg_point_id, track2$ele, col = "red", pch = ".", cex = 3)
+abline(v = domains)
+```
+
+```{r}
+track <- mutate(track, track_seg_id = 0, track_fid = 0, time = "")
+
+track <- sf::st_transform(track, 4326)
+
+unlink("../gpx/JMSR_ST_2_smooth.gpx")
+
+write_sf(track, "../gpx/JMSR_ST_2_smooth.gpx", "track_points", driver = "GPX")
+```
+
+```{r teardown, include=FALSE}
+options(oldoption)
+```
