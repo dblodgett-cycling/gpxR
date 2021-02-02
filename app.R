@@ -17,7 +17,8 @@ app_env <- reactiveValues(cp = list(),
                           history = NULL,
                           zoom = list(west = -180, south = -180,
                                       east = 180, north = 180),
-                          f = NULL)
+                          f = NULL,
+                          ele_control = NULL)
 
 ##### UI #####
 ui <- fluidPage(
@@ -56,7 +57,13 @@ ui <- fluidPage(
     fluidRow(
       column(width = 6,
              p("Clicked Point"),
-             verbatimTextOutput("click_info"))
+             verbatimTextOutput("click_info")),
+      column(width = 6,
+             textAreaInput("elevation_config", "Elevation Control Points",
+                           value = "start, end, num\n1, -1, 1", width = "100%",
+                           height = "200px",
+                           placeholder = "start, end, num\n1, -1, 1"),
+             shiny::actionButton("elevation_button", "Preview Smooth Elevation"))
     ))
   )
 )
@@ -74,6 +81,12 @@ upload_modal <- modalDialog(
 )
 
 server <- function(input, output, session) {
+
+  # Contains observers and reactives for track corner smoothing.
+  source("smoothing.R", local = TRUE)
+
+  # contains observers and reactives for elevation cleaning
+  source("elevation.R", local = TRUE)
 
   # Show the model on start up ...
   showModal(upload_modal)
@@ -143,12 +156,6 @@ server <- function(input, output, session) {
     })
 
   })
-
-  # Contains observers and reactives for track corner smoothing.
-  source("smoothing.R", local = TRUE)
-
-  # contains observers and reactives for elevation cleaning
-  source("elevation.R", local = TRUE)
 
   output$click_info <- renderPrint({
     o <- tail(app_env$history, n = 1)
