@@ -105,6 +105,8 @@ server <- function(input, output, session) {
 
     track <- sf::st_transform(track, 5070)
 
+    track <- add_distance(track)
+
     app_env$history <- list(track)
 
     app_env$track <- track
@@ -148,25 +150,14 @@ server <- function(input, output, session) {
   # contains observers and reactives for elevation cleaning
   source("elevation.R", local = TRUE)
 
-  # Observer for redrawing the elevation plot
-  observe({
-
-    track <- redraw_listener()
-
-    if(!is.null(track)) {
-
-      output$elevation <- renderPlot(ggplot(track, aes(track_seg_point_id, ele)) + geom_point())
-
+  output$click_info <- renderPrint({
+    o <- tail(app_env$history, n = 1)
+    if(is.list(o)) {
+      nearPoints(o[[1]], input$ele_click, addDist = TRUE)
     } else {
-
-      output$elevation <- renderPlot(ggplot())
-
+      ""
     }
 
-  })
-
-  output$click_info <- renderPrint({
-    nearPoints(tail(app_env$history, n = 1)[[1]], input$ele_click, addDist = TRUE)
   })
 
   write_out <- function(f) {

@@ -129,6 +129,8 @@ new_track <- eventReactive(input$savebutton, {
                           sf::st_transform(p$point, 5070)),
                         n_points = 10, reset_ids = TRUE)
 
+    track <- add_distance(track)
+
     app_env$history <- c(app_env$history, list(track))
 
   }

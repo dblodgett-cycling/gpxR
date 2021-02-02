@@ -228,15 +228,20 @@ to_points <- function(track, crs) {
 #' @inheritParams make_loop
 #' @export
 add_distance <- function(track) {
-  track <- st_drop_geometry(bind_cols(track,
-                                      as.data.frame(st_coordinates(st_transform(track, 5070)))))
 
-  track <- select(track, x = X, y = Y, z = ele)
+  if(is.null(track)) return(NULL)
+
+  track <- bind_cols(
+    track,
+    as.data.frame(st_coordinates(st_transform(track, 5070))))
+
+  track <- select(track, track_seg_point_id,
+                  x = X, y = Y, z = ele)
 
   track <- mutate(track, diff = sqrt((x - lag(x))^2 +
-                                   (y - lag(y))^2 +
-                                   (z - lag(z))^2),
-                ele_diff = z-lag(z))
+                                       (y - lag(y))^2 +
+                                       (z - lag(z))^2),
+                  ele_diff = z-lag(z))
 
   track$diff[1] <- 0
   track$ele_diff[1] <- 0
