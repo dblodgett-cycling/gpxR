@@ -13,7 +13,12 @@ observe({
     gg <- ggplot(track, aes(distance, z)) + geom_point()
 
     if(!is.null(app_env$ele_control)) {
-      gg <- gg + geom_vline(xintercept = app_env$ele_control)
+      rows <- c(app_env$ele_control$start, nrow(app_env$ele_control$start))
+
+      dist <- c(track$distance[app_env$ele_control$start],
+                track$distance[nrow(track)])
+
+      gg <- gg + geom_vline(xintercept = dist)
     }
 
     output$elevation <- renderPlot(gg)
@@ -27,5 +32,20 @@ observe({
 })
 
 recalc_elevation <- eventReactive(input$elevation_button, {
-  message("yep")
+
+  tryCatch({
+    dat <- read.table(text = input$elevation_config, header = TRUE, sep = ",")
+
+    dat <- arrange(dat, start)
+
+    app_env$ele_control <- dat
+
+  }, error = function(e) {
+
+    showNotification(paste("Error parsing elevation control:", e))
+
+  })
+
+  return(1)
+
 }, ignoreNULL = FALSE)

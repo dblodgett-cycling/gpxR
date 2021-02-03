@@ -124,7 +124,7 @@ clean_elev <- function(track, window = 4) {
 #' any number of sub domains.
 #' @inheritParams make_loop
 #' @param domains integer vector specifying breaks in elevation averaging.
-#' @param windows integer vector specifying desired size of roling mean for
+#' @param windows integer vector specifying desired size of rolling mean for
 #' each domain. Should be length(domains) - 1 long.
 #' @export
 smooth_elev <- function(track, domains, windows) {

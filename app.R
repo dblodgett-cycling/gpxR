@@ -60,9 +60,8 @@ ui <- fluidPage(
              verbatimTextOutput("click_info")),
       column(width = 6,
              textAreaInput("elevation_config", "Elevation Control Points",
-                           value = "start, end, num\n1, -1, 1", width = "100%",
-                           height = "200px",
-                           placeholder = "start, end, num\n1, -1, 1"),
+                           value = "start, size\n1, 1", width = "100%",
+                           height = "200px"),
              shiny::actionButton("elevation_button", "Preview Smooth Elevation"))
     ))
   )
