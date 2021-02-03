@@ -96,7 +96,7 @@ observe({
 })
 
 # Reactive triggered by undo button.
-last_track <- eventReactive(input$undobutton, {
+last_track <- eventReactive(input$undobutton | input$undobutton_ele, {
 
   if(length(app_env$history) == 1) {
 

@@ -127,12 +127,10 @@ clean_elev <- function(track, window = 4) {
 #' @param windows integer vector specifying desired size of rolling mean for
 #' each domain. Should be length(domains) - 1 long.
 #' @export
-smooth_elev <- function(track, domains, windows) {
+smooth_elev <- function(e, domains, windows) {
 
   if((length(domains) - 1) != length(windows))
     stop("windows must be one short than domains")
-
-  e <- track$ele
 
   w_i <- 1
   w_min_i <- 1
@@ -164,9 +162,8 @@ smooth_elev <- function(track, domains, windows) {
 
   }
 
-  track$ele <- e
+  e
 
-  track
 }
 
 #' cut track
@@ -235,13 +232,13 @@ add_distance <- function(track) {
     track,
     as.data.frame(st_coordinates(st_transform(track, 5070))))
 
-  track <- select(track, track_seg_point_id,
-                  x = X, y = Y, z = ele)
+  track <- select(track, track_seg_point_id, ele,
+                  x = X, y = Y)
 
   track <- mutate(track, diff = sqrt((x - lag(x))^2 +
                                        (y - lag(y))^2 +
-                                       (z - lag(z))^2),
-                  ele_diff = z-lag(z))
+                                       (ele - lag(ele))^2),
+                  ele_diff = ele-lag(ele))
 
   track$diff[1] <- 0
   track$ele_diff[1] <- 0

@@ -57,12 +57,13 @@ ui <- fluidPage(
     fluidRow(
       column(width = 6,
              p("Clicked Point"),
-             verbatimTextOutput("click_info")),
+             htmlOutput("click_info")),
       column(width = 6,
              textAreaInput("elevation_config", "Elevation Control Points",
                            value = "start, size\n1, 1", width = "100%",
                            height = "200px"),
-             shiny::actionButton("elevation_button", "Preview Smooth Elevation"))
+             shiny::actionButton("elevation_button", "Preview Smooth Elevation"),
+             shiny::actionButton("undobutton_ele", "Undo"))
     ))
   )
 )
@@ -153,16 +154,6 @@ server <- function(input, output, session) {
                    weight = 1.5, color = "black") %>%
         fitBounds(bb$west, bb$north, bb$east, bb$south)
     })
-
-  })
-
-  output$click_info <- renderPrint({
-    o <- tail(app_env$history, n = 1)
-    if(is.list(o)) {
-      nearPoints(o[[1]], input$ele_click, addDist = TRUE)
-    } else {
-      ""
-    }
 
   })
 
