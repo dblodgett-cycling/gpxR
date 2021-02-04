@@ -89,3 +89,41 @@ recalc_elevation <- eventReactive(input$elevation_button, {
   length(app_env$history)
 
 }, ignoreNULL = FALSE)
+
+edit_ele_modal <- modalDialog(title = "Edit Elevation Data",
+                              DT::DTOutput("ele_table"),
+                              easyClose = FALSE,
+                              footer = actionButton("close_ele_modal", "Close and Save"))
+
+observeEvent(input$ele_table_edit, {
+  track <- (tail(app_env$history, n = 1)[[1]])
+
+  edit <- select(st_drop_geometry(track), track_seg_point_id, ele)
+
+  app_env$track_temp <- edit
+
+  output$ele_table <- renderDT(edit, selection = 'none',
+                               editable = TRUE)
+
+  showModal(edit_ele_modal)
+})
+
+observeEvent(input$ele_table_cell_edit, {
+  app_env$track_temp <- editData(app_env$track_temp, input$ele_table_cell_edit)
+})
+
+observeEvent(input$close_ele_modal, {
+  if(!is.null(input$ele_table_cell_edit)) {
+    tryCatch({
+      track <- (tail(app_env$history, n = 1)[[1]])
+
+      track$ele <- app_env$track_temp$ele
+
+      app_env$history <- app_env$history <- c(app_env$history, list(track))
+
+    }, error = function(e) {
+      showNotification(paste("Error while saving table:", e), duration = NULL)
+    })
+  }
+  removeModal()
+})
