@@ -6,6 +6,23 @@ load_track_points <- function(track_f) {
   read_sf(track_f, "track_points")
 }
 
+#' write track points
+#' @param track sf data.frame gpx track
+#' @param track_f character output track file
+#' @export
+write_track_points <- function(track, track_f) {
+  track <- track %>%
+    select(track_seg_point_id, ele) %>%
+    mutate(track_seg_id = 0, track_fid = 0, time = "") %>%
+    sf::st_transform(4326)
+
+  unlink(track_f)
+
+  sf::write_sf(track, track_f, "track_points", driver = "GPX")
+
+  return(invisible(track_f))
+}
+
 #' make loop
 #' @param track sf data.frame gpx track
 #' @param start_id numeric track_seg_point_id of start

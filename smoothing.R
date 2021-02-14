@@ -1,3 +1,35 @@
+### Observer for redrawing the map
+observe({
+
+  track <- redraw_listener()
+
+  if(!is.null(track)) {
+
+    sf::write_sf(buffer_track(track), gt)
+
+    gj <- jsonlite::fromJSON(gt, simplifyVector = FALSE)
+
+    unlink(gt)
+
+  } else {
+    gj <- NULL
+  }
+
+  bb <- app_env$zoom
+
+  # Base map
+  output$trackmap <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$OpenStreetMap,
+                       options = providerTileOptions(noWrap = TRUE)
+      ) %>%
+      addGeoJSON(gj,
+                 weight = 1.5, color = "black") %>%
+      fitBounds(bb$west, bb$north, bb$east, bb$south)
+  })
+
+})
+
 # Observer for ends / point toggle
 observe({
   app_env$ends <- input$point_id == "Ends"
