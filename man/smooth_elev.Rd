@@ -4,14 +4,12 @@
 \alias{smooth_elev}
 \title{smooth elev}
 \usage{
-smooth_elev(track, domains, windows)
+smooth_elev(e, domains, windows)
 }
 \arguments{
-\item{track}{sf data.frame gpx track}
-
 \item{domains}{integer vector specifying breaks in elevation averaging.}
 
-\item{windows}{integer vector specifying desired size of roling mean for
+\item{windows}{integer vector specifying desired size of rolling mean for
 each domain. Should be length(domains) - 1 long.}
 }
 \description{

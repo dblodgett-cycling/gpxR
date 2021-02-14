@@ -99,7 +99,13 @@ bez_smooth <- function(track, start_id, end_id, control, n_points = 10, reset_id
 
   new_points$ele <- seq(from = track$ele[start_row], to = track$ele[end_row], length.out = 10)
 
-  out <- bind_rows(track[1:(start_row - 1), ], new_points, track[(end_row + 1):nrow(track), ])
+  if(end_row < nrow(track)) {
+    out <- bind_rows(track[1:(start_row - 1), ], new_points, track[(end_row + 1):nrow(track), ])
+  } else if(start_row == 1) {
+    out <- bind_rows(new_points, track[(end_row + 1):nrow(track), ])
+  } else {
+    out <- bind_rows(track[1:(start_row - 1), ], new_points)
+  }
 
   if(reset_ids) {
     out$track_seg_point_id <- 1:nrow(out)
@@ -186,9 +192,28 @@ cut_track <- function(track, cut_one, cut_two) {
 segmentize_track <- function(track, l) {
   crs <- sf::st_crs(track)
 
-  track <- sf::st_segmentize(to_line(track), l)
+  track <- sf::st_segmentize(to_line(track), dfMaxLength = l)
 
   to_points(track, crs)
+}
+
+#' resample_track
+#' @description resample track to a specific distance spacing
+#' @inheritParams make_loop
+#' @param l numeric distance between points
+#' @export
+resample_track <- function(track, l) {
+  p_track <- add_distance(track)
+
+  new_track <- data.frame(distance = seq(from = 1, to = max(p_track$distance),
+                                         by = l))
+
+  new_track[["x"]] <- approx(p_track$distance, p_track$x, new_track$distance)$y
+  new_track[["y"]] <- approx(p_track$distance, p_track$y, new_track$distance)$y
+  new_track[["ele"]] <- approx(p_track$distance, p_track$ele, new_track$distance)$y
+  new_track[["track_seg_point_id"]] <- seq(1, nrow(new_track), 1)
+
+  sf::st_as_sf(new_track, coords = c("x", "y"), crs = sf::st_crs(5070))
 }
 
 #' simplify track
