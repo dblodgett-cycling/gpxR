@@ -1,28 +1,46 @@
 ##### UI #####
 ui <- fluidPage(
+  shiny::selectInput("mode", "mode", c("Modify Horizontal Curvature",
+                                       "Make Loop",
+                                       "Resample Track"),
+                     selected = "Modify Horizontal Curvature"),
   sidebarLayout(
     sidebarPanel(
-      h4("Modify Horizontal Curvature"),
-      p("1) Zoom to the corner to edit (hint: hold shift to drag a box)"),
-      p(HTML("2) Click the desired start <strong>then</strong> end point for the new curve.")),
-      p("3) Click the desired control point of the new curve. (hint: use undo to experiment)"),
-      p("4) Click 'Save Point' to recalculate the track with the new curve."),
-      p("5) Repeat 1 through 4 until you are happy."),
-      p("6) Click 'Save track' to download your modified gpx file."),
-      br(),
-      p("Inputs for this workflow can be created with tools such as ride with gps."),
-      p("Elevation data must be supplied from elsewhere and all added points will have linear interpolated elevations."),
-      p("To densify the points, add curves with little to no curvature.")
+      conditionalPanel(condition = "input.mode=='Modify Horizontal Curvature'",
+                       h4("Modify Horizontal Curvature"),
+                       p("1) Zoom to the corner to edit (hint: hold shift to drag a box)"),
+                       p(HTML("2) Click the desired start <strong>then</strong> end point for the new curve.")),
+                       p("3) Click the desired control point of the new curve. (hint: use undo to experiment)"),
+                       p("4) Click 'Save Point' to recalculate the track with the new curve."),
+                       p("5) Repeat 1 through 4 until you are happy."),
+                       p("6) Click 'Save track' to download your modified gpx file."),
+                       br(),
+                       p("Inputs for this workflow can be created with tools such as ride with gps."),
+                       p("Elevation data must be supplied from elsewhere and all added points will have linear interpolated elevations."),
+                       p("To densify the points, add curves with little to no curvature.")
+      ),
+      conditionalPanel(condition = "input.mode=='Make Loop'",
+                       h4("Make Loop")),
+      conditionalPanel(condition = "input.mode=='Resample Track'",
+                       h4("Resample Track"))
     ),
     mainPanel(
       leafletOutput("trackmap"),
       p(),
-      shiny::actionButton("undobutton", "Undo"),
-      shiny::radioButtons("point_id", "Ends or Point",
-                          choices = c("Ends", "Point"),
-                          inline = TRUE),
-      actionButton("savebutton", "Save Point"),
-      shiny::verbatimTextOutput("controlpoint")
+      conditionalPanel(condition = "input.mode=='Modify Horizontal Curvature'",
+                       shiny::actionButton("undobutton", "Undo"),
+                       shiny::radioButtons("point_id", "Ends or Point",
+                                           choices = c("Ends", "Point"),
+                                           inline = TRUE),
+                       actionButton("savebutton", "Save Point"),
+                       shiny::verbatimTextOutput("controlpoint")
+      ),
+      conditionalPanel(condition = "input.mode=='Make Loop'",
+                       p("Make Loop")
+      ),
+      conditionalPanel(condition = "input.mode=='Resample Track'",
+                       p("Resample Track")
+      )
     )
   ),
   sidebarLayout(sidebarPanel(
