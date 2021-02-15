@@ -34,7 +34,6 @@ write_track_points <- function(track, track_f) {
 #' to match elevation of end?
 #' @importFrom dplyr filter mutate bind_rows
 #' @importFrom sf st_coordinates st_crs
-#' @importFrom bezier bezier
 #' @export
 make_loop <- function(track, start_id, end_id,
                       lap_start = NULL,
@@ -58,7 +57,7 @@ make_loop <- function(track, start_id, end_id,
 
     control <- matrix(control, nrow = 1)
 
-    new_points <- bezier(t = seq(0, 1, length = 10), p = control,
+    new_points <- bezier::bezier(t = seq(0, 1, length = 10), p = control,
                          start = end_point, end = start_point)
 
     new_points <- as.data.frame(new_points)
@@ -68,7 +67,7 @@ make_loop <- function(track, start_id, end_id,
 
     new_points$ele <- seq(from = sub$ele[nrow(sub)], to = sub$ele[1], length.out = 10)
 
-    sub <- bind_rows(sub, new_points)
+    sub <- bind_rows(sub[2:(nrow(sub) - 1), ], new_points)
   }
 
   if(!is.null(lap_start)) {

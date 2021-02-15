@@ -27,16 +27,13 @@ ui <- fluidPage(
     mainPanel(
       leafletOutput("trackmap"),
       p(),
-      conditionalPanel(condition = "input.mode=='Modify Horizontal Curvature'",
+      conditionalPanel(condition = "input.mode=='Modify Horizontal Curvature' || input.mode=='Make Loop'",
                        shiny::actionButton("undobutton", "Undo"),
                        shiny::radioButtons("point_id", "Ends or Point",
                                            choices = c("Ends", "Point"),
                                            inline = TRUE),
                        actionButton("savebutton", "Save Point"),
                        shiny::verbatimTextOutput("controlpoint")
-      ),
-      conditionalPanel(condition = "input.mode=='Make Loop'",
-                       p("Make Loop")
       ),
       conditionalPanel(condition = "input.mode=='Resample Track'",
                        p("Resample Track")
