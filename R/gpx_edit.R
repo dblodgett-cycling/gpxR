@@ -70,7 +70,7 @@ make_loop <- function(track, start_id, end_id,
     sub <- bind_rows(sub[2:(nrow(sub) - 1), ], new_points)
   }
 
-  if(!is.null(lap_start)) {
+  if(!is.null(lap_start) && !is.na(lap_start)) {
     row_start <- which(sub$track_seg_point_id == lap_start)
 
     sub <- bind_rows(sub[row_start:nrow(sub), ],

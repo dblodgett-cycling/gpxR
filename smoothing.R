@@ -150,15 +150,16 @@ new_track <- eventReactive(input$savebutton, {
 
   if(length(p) > 0) {
 
-    new_row <- sf::st_sf(start_id = p$start_id, end_id = p$end_id, point = p$point)
-
-    app_env$df <- rbind(app_env$df, new_row)
-
     app_env$zoom <- input$trackmap_bounds
 
     track <- (tail(app_env$history, n = 1)[[1]])
 
     if(input$mode == "Modify Horizontal Curvature") {
+
+      if(is.null(p$point)) {
+        showNotification("Control Point Required")
+        return()
+      }
 
       track <- bez_smooth(track,
                           p$start_id, p$end_id,
@@ -174,9 +175,23 @@ new_track <- eventReactive(input$savebutton, {
         p$end_id <- temp
       }
 
-      track <- make_loop(track, p$start_id, p$end_id, lap_start = NULL,
-                         control = sf::st_coordinates(
-                           sf::st_transform(p$point, 5070)),
+      cp <- NULL
+
+      if(input$loop_curve_option) {
+
+        if(is.null(p$point)) {
+          showNotification("Control Point Required")
+          return()
+        }
+
+        cp <- sf::st_coordinates(
+          sf::st_transform(p$point, 5070))
+
+      }
+
+      track <- make_loop(track, p$start_id, p$end_id,
+                         lap_start = input$loop_start_id,
+                         control = ,
                          correct_elevation = TRUE)
 
     }

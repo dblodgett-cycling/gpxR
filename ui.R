@@ -20,7 +20,12 @@ ui <- fluidPage(
                        p("To densify the points, add curves with little to no curvature.")
       ),
       conditionalPanel(condition = "input.mode=='Make Loop'",
-                       h4("Make Loop")),
+                       h4("Make Loop"),
+                       p("1) Zoom to location you want to insert a loop."),
+                       p("2) Click the start and end points of the loop, order isn't important."),
+                       p("3) Optionally, enter a point ID to use as the loop start. Find this by clicking the map or elevation profile. Leaving this blank will use the start point of the loop."),
+                       p("4) If the ends should not be connected with a curve, uncheck the box.")
+      ),
       conditionalPanel(condition = "input.mode=='Resample Track'",
                        h4("Resample Track"))
     ),
@@ -35,8 +40,17 @@ ui <- fluidPage(
                        actionButton("savebutton", "Save Point"),
                        shiny::verbatimTextOutput("controlpoint")
       ),
+      conditionalPanel(condition = "input.mode=='Make Loop'",
+                       numericInput("loop_start_id", "Loop Start ID",
+                                    value = NULL, min = 1, step = 1),
+                       checkboxInput("loop_curve_option", "Add Connecting Curve",
+                                     value = TRUE)
+                       ),
       conditionalPanel(condition = "input.mode=='Resample Track'",
-                       p("Resample Track")
+                       p("Resample Track"),
+                       numericInput("resample_tolerance",
+                                    label = "Resample Tolerance",
+                                    value = NULL, min = 1, max = 10, step = 1)
       )
     )
   ),
