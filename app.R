@@ -43,7 +43,8 @@ server <- function(input, output, session) {
   observeEvent(input$dismiss_modal, {
 
     if(is.null(input$f)) {
-      showNotification("Upload gpx file first.")
+      showNotification("Upload gpx file first.",
+                       duration = NULL, type = "warning")
       return()
     }
 

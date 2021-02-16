@@ -82,7 +82,8 @@ recalc_elevation <- eventReactive(input$elevation_button, {
 
   }, error = function(e) {
 
-    showNotification(paste("Error parsing elevation control:", e))
+    showNotification(paste("Error parsing elevation control:", e),
+                     duration = NULL, type = "error")
 
   })
 
@@ -122,7 +123,8 @@ observeEvent(input$close_ele_modal, {
       app_env$history <- app_env$history <- c(app_env$history, list(track))
 
     }, error = function(e) {
-      showNotification(paste("Error while saving table:", e), duration = NULL)
+      showNotification(paste("Error while saving table:", e),
+                       duration = NULL, type = "error")
     })
   }
   removeModal()

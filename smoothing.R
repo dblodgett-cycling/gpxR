@@ -148,7 +148,7 @@ last_track <- eventReactive(input$undobutton | input$undobutton_ele, {
 new_track <- eventReactive(input$savebutton, {
   p <- app_env$cp
 
-  if(length(p) > 0) {
+  if(length(p) > 0 | input$mode == "Resample Track" | input$mode == "Simplify Track") {
 
     app_env$zoom <- input$trackmap_bounds
 
@@ -157,7 +157,8 @@ new_track <- eventReactive(input$savebutton, {
     if(input$mode == "Modify Horizontal Curvature") {
 
       if(is.null(p$point)) {
-        showNotification("Control Point Required")
+        showNotification("Control Point Required",
+                         type = "error", duration = NULL)
         return()
       }
 
@@ -167,7 +168,7 @@ new_track <- eventReactive(input$savebutton, {
                             sf::st_transform(p$point, 5070)),
                           n_points = 10, reset_ids = TRUE)
 
-    } else {
+    } else if(input$mode == "Make Loop") {
 
       if(p$start_id > p$end_id) {
         temp <- p$start_id
@@ -180,8 +181,8 @@ new_track <- eventReactive(input$savebutton, {
       if(input$loop_curve_option) {
 
         if(is.null(p$point)) {
-          showNotification("Control Point Required")
-          return()
+          showNotification("Control Point Required",
+                           type = "error", duration = NULL)
         }
 
         cp <- sf::st_coordinates(
@@ -191,8 +192,22 @@ new_track <- eventReactive(input$savebutton, {
 
       track <- make_loop(track, p$start_id, p$end_id,
                          lap_start = input$loop_start_id,
-                         control = ,
-                         correct_elevation = TRUE)
+                         control = cp,
+                         correct_elevation = input$correct_elevation_option)
+
+    } else if(input$mode == "Resample Track") {
+
+      if(is.na(input$resample_tolerance)) {
+        showNotification("Enter a tolerance.",
+                         type = "error", duration = NULL)
+        return()
+      }
+
+      track <- resample_track(track, input$resample_tolerance)
+
+    } else {
+
+      track <- simplify_track(track, input$simplify_tolerance)
 
     }
 

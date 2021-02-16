@@ -1,8 +1,14 @@
 ##### UI #####
 ui <- fluidPage(
-  shiny::selectInput("mode", "mode", c("Modify Horizontal Curvature",
+  h2("gpxR - GPX editing tools for RGT Magic Roads"),
+  p("This application is broken into two main parts: geospatial modifications and elevation modifications."),
+  p("Each action can be executed and undone in a trial and error mode."),
+  p("Saving your work by periodically downloading the track is encouraged."),
+  p("Inputs can be drawn with a route building tool or pulled from raw GPS."),
+  shiny::selectInput("mode", "Geospatial Modification Mode", c("Modify Horizontal Curvature",
                                        "Make Loop",
-                                       "Resample Track"),
+                                       "Resample Track",
+                                       "Simplify Track"),
                      selected = "Modify Horizontal Curvature"),
   sidebarLayout(
     sidebarPanel(
@@ -27,23 +33,29 @@ ui <- fluidPage(
                        p("4) If the ends should not be connected with a curve, uncheck the box.")
       ),
       conditionalPanel(condition = "input.mode=='Resample Track'",
-                       h4("Resample Track"))
+                       h4("Resample Track"),
+                       p("Enter a desired distance between points in meters."),
+                       p("Linear interpolation is used to resample the track.")),
+      conditionalPanel(condition = "input.mode=='Simplify Track'",
+                       h4("Simplify Track"),
+                       p("Enter a desired simplification tolerance in meters."),
+                       p("This tolerance is the maximum deviation of the route for a point to be removed."))
     ),
     mainPanel(
       leafletOutput("trackmap"),
       p(),
       conditionalPanel(condition = "input.mode=='Modify Horizontal Curvature' || input.mode=='Make Loop'",
-                       shiny::actionButton("undobutton", "Undo"),
                        shiny::radioButtons("point_id", "Ends or Point",
                                            choices = c("Ends", "Point"),
                                            inline = TRUE),
-                       actionButton("savebutton", "Save Point"),
                        shiny::verbatimTextOutput("controlpoint")
       ),
       conditionalPanel(condition = "input.mode=='Make Loop'",
                        numericInput("loop_start_id", "Loop Start ID",
                                     value = NULL, min = 1, step = 1),
                        checkboxInput("loop_curve_option", "Add Connecting Curve",
+                                     value = TRUE),
+                       checkboxInput("correct_elevation_option", "Correct start - end elevation.",
                                      value = TRUE)
                        ),
       conditionalPanel(condition = "input.mode=='Resample Track'",
@@ -51,7 +63,13 @@ ui <- fluidPage(
                        numericInput("resample_tolerance",
                                     label = "Resample Tolerance",
                                     value = NULL, min = 1, max = 10, step = 1)
-      )
+      ),
+      conditionalPanel(condition = "input.mode=='Simplify Track'",
+                       p("Simplify Track"),
+                       numericInput("simplify_tolerance", "Simplification Tolerance",
+                                    value = 0.1, min = 0.001, max = .5)),
+      actionButton("savebutton", "Go Do It!"),
+      shiny::actionButton("undobutton", "Undo")
     )
   ),
   sidebarLayout(sidebarPanel(
@@ -84,8 +102,8 @@ ui <- fluidPage(
 
 # the modal dialog where the user can enter the query details.
 upload_modal <- modalDialog(
-  title = "Upload GPX",
-  p("This app is designed to reflow corners of a gpx to ensure they are not too sharp for RGT."),
+  title = h2("gpxR - GPX editing tools for RGT Magic Roads"),
+  p("This app is designed to reflow corners, create looping GPX routes, and generally clean up geospatial tracks to ensure they are suitable for RGT Magic Roads."),
   p("A second module of the app allows editing and smoothing of elevation data."),
   p("This application is free and open source and is being provided as a service to the community."),
   p(HTML('See <a href="https://github.com/dblodgett-cycling/gpxR" target="_blank">the github repository</a> for more.')),
