@@ -2,6 +2,8 @@
 
 This repository supports a variety of tools for working with gpx files in R.
 
+[Demos recordings available here.](https://www.youtube.com/playlist?list=PL7Z1D2uMNgRjVate7J9BCVTVyuyLvTmBl)
+
 ## Running
 
 Locally, checkout and run the `gpxr.Rproj` in RStudio. Run the app via `app.R`. Access the app via `http://127.0.0.1:7450/`
