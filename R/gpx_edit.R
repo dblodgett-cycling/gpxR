@@ -9,6 +9,7 @@ load_track_points <- function(track_f) {
 #' write track points
 #' @param track sf data.frame gpx track
 #' @param track_f character output track file
+#' @importFrom dplyr `%>%` select mutate
 #' @export
 write_track_points <- function(track, track_f) {
   track <- track %>%
@@ -63,7 +64,7 @@ make_loop <- function(track, start_id, end_id,
     new_points <- as.data.frame(new_points)
     names(new_points) <- c("X", "Y")
 
-    new_points <- st_as_sf(new_points, coords = c("X", "Y"), crs = st_crs(sub))
+    new_points <- sf::st_as_sf(new_points, coords = c("X", "Y"), crs = st_crs(sub))
 
     new_points$ele <- seq(from = sub$ele[nrow(sub)], to = sub$ele[1], length.out = 10)
 
@@ -111,7 +112,7 @@ bez_smooth <- function(track, start_id, end_id, control, n_points = 10, reset_id
   new_points <- as.data.frame(new_points)
   names(new_points) <- c("X", "Y")
 
-  new_points <- st_as_sf(new_points, coords = c("X", "Y"), crs = st_crs(track))
+  new_points <- sf::st_as_sf(new_points, coords = c("X", "Y"), crs = st_crs(track))
 
   new_points$ele <- seq(from = track$ele[start_row], to = track$ele[end_row], length.out = 10)
 
@@ -142,9 +143,9 @@ clean_elev <- function(track, window = 4) {
 }
 
 #' smooth elev
-#' @description Applies a variable size roling mean over
+#' @description Applies a variable size rolling mean over
 #' any number of sub domains.
-#' @inheritParams make_loop
+#' @param e numeric vector of elevation data
 #' @param domains integer vector specifying breaks in elevation averaging.
 #' @param windows integer vector specifying desired size of rolling mean for
 #' each domain. Should be length(domains) - 1 long.
@@ -226,9 +227,9 @@ resample_track <- function(track, l) {
   new_track <- data.frame(distance = seq(from = 1, to = max(p_track$distance),
                                          by = l))
 
-  new_track[["x"]] <- approx(p_track$distance, p_track$x, new_track$distance)$y
-  new_track[["y"]] <- approx(p_track$distance, p_track$y, new_track$distance)$y
-  new_track[["ele"]] <- approx(p_track$distance, p_track$ele, new_track$distance)$y
+  new_track[["x"]] <- stats::approx(p_track$distance, p_track$x, new_track$distance)$y
+  new_track[["y"]] <- stats::approx(p_track$distance, p_track$y, new_track$distance)$y
+  new_track[["ele"]] <- stats::approx(p_track$distance, p_track$ele, new_track$distance)$y
   new_track[["track_seg_point_id"]] <- seq(1, nrow(new_track), 1)
 
   sf::st_as_sf(new_track, coords = c("x", "y"), crs = crs)
@@ -267,6 +268,7 @@ to_points <- function(track, crs) {
 #' Add distance
 #' @inheritParams make_loop
 #' @param crs object compatible with sf::st_crs -- will be derived from gpxr::get_utm
+#' @importFrom dplyr bind_cols
 #' @export
 add_distance <- function(track, crs = NULL) {
 
@@ -280,15 +282,15 @@ add_distance <- function(track, crs = NULL) {
 
   track <- bind_cols(
     track,
-    as.data.frame(st_coordinates(st_transform(track, crs))))
+    as.data.frame(sf::st_coordinates(sf::st_transform(track, crs))))
 
   track <- select(track, track_seg_point_id, ele,
                   x = X, y = Y)
 
-  track <- mutate(track, diff = sqrt((x - lag(x))^2 +
-                                       (y - lag(y))^2 +
-                                       (ele - lag(ele))^2),
-                  ele_diff = ele-lag(ele))
+  track <- mutate(track, diff = sqrt((x - dplyr::lag(x))^2 +
+                                       (y - dplyr::lag(y))^2 +
+                                       (ele - dplyr::lag(ele))^2),
+                  ele_diff = ele-dplyr::lag(ele))
 
   track$diff[1] <- 0
   track$ele_diff[1] <- 0

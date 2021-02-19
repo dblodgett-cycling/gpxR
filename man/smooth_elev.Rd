@@ -7,12 +7,14 @@
 smooth_elev(e, domains, windows)
 }
 \arguments{
+\item{e}{numeric vector of elevation data}
+
 \item{domains}{integer vector specifying breaks in elevation averaging.}
 
 \item{windows}{integer vector specifying desired size of rolling mean for
 each domain. Should be length(domains) - 1 long.}
 }
 \description{
-Applies a variable size roling mean over
+Applies a variable size rolling mean over
 any number of sub domains.
 }
