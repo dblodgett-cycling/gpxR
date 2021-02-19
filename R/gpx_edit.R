@@ -272,8 +272,10 @@ add_distance <- function(track, crs = NULL) {
 
   if(is.null(track)) return(NULL)
 
-  if(is.null(crs)) {
+  if(is.null(crs) & sf::st_is_longlat(track)) {
     crs <- get_utm(sf::st_coordinates(track[1, ]))
+  } else {
+    crs <- sf::st_crs(track)
   }
 
   track <- bind_cols(

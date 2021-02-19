@@ -1,4 +1,4 @@
-source("R/gpx_edit.R")
+library(gpxr)
 library(dplyr)
 library(shiny)
 library(leaflet)
