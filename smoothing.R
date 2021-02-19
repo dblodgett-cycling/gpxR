@@ -5,7 +5,7 @@ observe({
 
   if(!is.null(track)) {
 
-    sf::write_sf(buffer_track(track, app_env$proj), gt)
+    sf::write_sf(sf::st_transform(track, 4326),  gt)
 
     gj <- jsonlite::fromJSON(gt, simplifyVector = FALSE)
 
@@ -23,8 +23,9 @@ observe({
       addProviderTiles(providers$OpenStreetMap,
                        options = providerTileOptions(noWrap = TRUE)
       ) %>%
-      addGeoJSON(gj,
-                 weight = 1.5, color = "black") %>%
+      leaflet.extras::addGeoJSONv2(gj, markerType = "circleMarker",
+                 stroke = FALSE, fillColor = "black", fillOpacity = 0.7,
+                 markerOptions = markerOptions(radius = 2)) %>%
       fitBounds(bb$west, bb$north, bb$east, bb$south)
   })
 
