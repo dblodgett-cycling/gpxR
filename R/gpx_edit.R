@@ -219,6 +219,8 @@ segmentize_track <- function(track, l) {
 #' @param l numeric distance between points
 #' @export
 resample_track <- function(track, l) {
+  crs <- sf::st_crs(track)
+
   p_track <- add_distance(track)
 
   new_track <- data.frame(distance = seq(from = 1, to = max(p_track$distance),
@@ -229,7 +231,7 @@ resample_track <- function(track, l) {
   new_track[["ele"]] <- approx(p_track$distance, p_track$ele, new_track$distance)$y
   new_track[["track_seg_point_id"]] <- seq(1, nrow(new_track), 1)
 
-  sf::st_as_sf(new_track, coords = c("x", "y"), crs = sf::st_crs(5070))
+  sf::st_as_sf(new_track, coords = c("x", "y"), crs = crs)
 }
 
 #' simplify track
@@ -264,14 +266,19 @@ to_points <- function(track, crs) {
 
 #' Add distance
 #' @inheritParams make_loop
+#' @param crs object compatible with sf::st_crs -- will be derived from gpxr::get_utm
 #' @export
-add_distance <- function(track) {
+add_distance <- function(track, crs = NULL) {
 
   if(is.null(track)) return(NULL)
 
+  if(is.null(crs)) {
+    crs <- get_utm(sf::st_coordinates(track[1, ]))
+  }
+
   track <- bind_cols(
     track,
-    as.data.frame(st_coordinates(st_transform(track, 5070))))
+    as.data.frame(st_coordinates(st_transform(track, crs))))
 
   track <- select(track, track_seg_point_id, ele,
                   x = X, y = Y)
@@ -295,11 +302,32 @@ add_distance <- function(track) {
 
 #' buffer track
 #' @inheritParams make_loop
-#' @param proj input to sf::st_crs to buffer points in
+#' @param crs input to sf::st_crs to buffer points in
 #' @export
-buffer_track <- function(track, proj = 5070) {
+buffer_track <- function(track, crs = NULL) {
+
+  if(is.null(crs)) {
+    crs <- get_utm(sf::st_coordinates(track[1, ]))
+  }
+
   sf::st_transform(
     sf::st_buffer(
-      sf::st_transform(track, proj),
-      dist = 2, nQuadSegs = 2), 4326)
+      sf::st_transform(track, crs),
+      dist = 2, nQuadSegs = 1), 4326)
+
+}
+
+#' get utm zone
+#' @param p numeric with longitude in the first position
+#' @export
+get_utm <- function(p) {
+  cm <- seq(-177, 177, 6)
+
+  names(cm) <- seq(1, 60, 1)
+
+  d <- abs((as.numeric(cm) - p[1]))
+
+  zone <- names(cm[d == min(d)][1])
+
+  paste0("+proj=utm +zone=", zone, " +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
 }

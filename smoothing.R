@@ -5,7 +5,7 @@ observe({
 
   if(!is.null(track)) {
 
-    sf::write_sf(buffer_track(track), gt)
+    sf::write_sf(buffer_track(track, app_env$proj), gt)
 
     gj <- jsonlite::fromJSON(gt, simplifyVector = FALSE)
 
@@ -165,7 +165,7 @@ new_track <- eventReactive(input$savebutton, {
       track <- bez_smooth(track,
                           p$start_id, p$end_id,
                           sf::st_coordinates(
-                            sf::st_transform(p$point, 5070)),
+                            sf::st_transform(p$point, app_env$proj)),
                           n_points = 10, reset_ids = TRUE)
 
     } else if(input$mode == "Make Loop") {
@@ -186,7 +186,7 @@ new_track <- eventReactive(input$savebutton, {
         }
 
         cp <- sf::st_coordinates(
-          sf::st_transform(p$point, 5070))
+          sf::st_transform(p$point, app_env$proj))
 
       }
 
@@ -211,7 +211,7 @@ new_track <- eventReactive(input$savebutton, {
 
     }
 
-    track <- add_distance(track)
+    track <- add_distance(track, app_env$proj)
 
     app_env$history <- c(app_env$history, list(track))
 

@@ -4,12 +4,12 @@
 \alias{buffer_track}
 \title{buffer track}
 \usage{
-buffer_track(track, proj = 5070)
+buffer_track(track, crs = NULL)
 }
 \arguments{
 \item{track}{sf data.frame gpx track}
 
-\item{proj}{input to sf::st_crs to buffer points in}
+\item{crs}{input to sf::st_crs to buffer points in}
 }
 \description{
 buffer track

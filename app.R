@@ -19,7 +19,8 @@ app_env <- reactiveValues(cp = list(),
                           zoom = list(west = -180, south = -180,
                                       east = 180, north = 180),
                           f = NULL,
-                          ele_control = NULL)
+                          ele_control = NULL,
+                          proj = NULL)
 
 source("ui.R")
 
@@ -54,6 +55,8 @@ server <- function(input, output, session) {
 
     track <- load_track_points(input$f$datapath)
 
+    app_env$proj <- get_utm(sf::st_coordinates(track[1, ]))
+
     track <- simplify_track(track, 0)
 
     bb <- as.list(sf::st_bbox(track))
@@ -61,9 +64,9 @@ server <- function(input, output, session) {
 
     app_env$zoom <- bb
 
-    track <- sf::st_transform(track, 5070)
+    track <- sf::st_transform(track, app_env$proj)
 
-    track <- add_distance(track)
+    track <- add_distance(track, app_env$proj)
 
     app_env$history <- list(track)
 

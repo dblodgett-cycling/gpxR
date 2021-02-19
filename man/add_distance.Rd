@@ -4,10 +4,12 @@
 \alias{add_distance}
 \title{Add distance}
 \usage{
-add_distance(track)
+add_distance(track, crs = NULL)
 }
 \arguments{
 \item{track}{sf data.frame gpx track}
+
+\item{crs}{object compatible with sf::st_crs -- will be derived from gpxr::get_utm}
 }
 \description{
 Add distance
